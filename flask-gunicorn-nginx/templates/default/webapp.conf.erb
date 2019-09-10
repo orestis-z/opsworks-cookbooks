@@ -1,0 +1,25 @@
+upstream python_backend {
+    server <%= helper.gunicorn_syslog %>;
+}
+
+server {
+    listen 80 default_server;
+    server_name _;
+
+    # No logs, to avoid filling the instance disk
+    log_not_found off;
+
+    # Deny all attempts to access hidden files such as .htaccess, .htpasswd, .DS_Store (Mac).
+    location ~ /\. {
+        deny all;
+    }
+    
+    location / {
+        # Proxy pass directive must be the same port on which the gunicorn process is listening.
+        proxy_pass http://127.0.0.1:8000;
+
+        # For SSE (https://stackoverflow.com/questions/13672743/eventsource-server-sent-events-through-nginx)
+        proxy_set_header Connection '';
+        proxy_http_version 1.1;
+    }
+}

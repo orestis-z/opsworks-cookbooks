@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Launch Gunicorn server
+# The purpose of this script is to set some environment variables before launching gunicorn server.
+
+cd <%= helper.app_dir %>
+
+source venv/bin/activate
+
+exec gunicorn \
+    <%= node['flask-gunicorn-nginx']['wsgi_module'] %> \
+    --workers=1 \
+    --pid=<%= File.join(helper.app_deploy[:deploy_to], "run/gunicorn-master.pid") %> \
+    --worker-class=gevent \
+    --log-syslog-to=<%= helper.gunicorn_syslog %>
