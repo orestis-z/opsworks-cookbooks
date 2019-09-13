@@ -1,15 +1,17 @@
-Chef::Log.info "Variables: helper.repository_dir=\"#{helper.repository_dir}\", helper.app_dir=\"#{helper.app_dir}\""
-
 ######################
 ## Install Packages ##
 ######################
 
-package "git"
+execute "Install amazon-linux-extras packages" do
+  user "root"
+  command "amazon-linux-extras install epel"
+end
+
 package "nginx"
 
 execute "Install yum packages" do
   user "root"
-  command "yum install -y python36 python36-devel.x86_64 postgresql96-devel.x86_64"
+  command "yum install -y python36 python36-devel.x86_64 python36-pip postgresql-devel.x86_64"
 end
 
 execute "Upgrade PIP" do
@@ -27,7 +29,7 @@ end
 #################
 
 ["bin", "log", "etc", "run"].each do |folder|
-  directory File.join(helper.app_deploy[:deploy_to], folder) do
+  directory File.join(helper.deploy_to, folder) do
     recursive true
   end
 end
@@ -69,15 +71,19 @@ bash "Creating default supervisord configuration file" do
   EOS
 end
 
+app_dir = helper.app_dir
+
 # supervisord configuration for Gunicorn
 template helper.gunicorn_supervisor_conf_path do
   source "gunicorn.conf.erb"
+  variables app_dir: app_dir
 end
 
 # gunicorn launch file
 template helper.gunicorn_start_path do
   mode "0700"
   source "gunicorn-start.sh.erb"
+  variables app_dir: app_dir
 end
 
 execute "Start supervisord if not running" do
@@ -94,10 +100,15 @@ bash "Add SSH key for GIT" do
     code <<-EOS
       touch ~/.ssh/id_rsa
       chmod 400 ~/.ssh/id_rsa
-      echo '#{helper.app_deploy["scm"]["ssh_key"]}' >> ~/.ssh/id_rsa
+      echo '#{helper.app_source[:ssh_key]}' >> ~/.ssh/id_rsa
       eval $(ssh-agent -s)
       ssh-add ~/.ssh/id_rsa
     EOS
+end
+
+execute "Add bitbucket.org to known hosts" do
+    user "root"
+    command "ssh-keyscan -H bitbucket.org > ~/.ssh/known_hosts"
 end
 
 directory helper.repository_dir do
@@ -106,12 +117,12 @@ directory helper.repository_dir do
   only_if { ::File.directory?(helper.repository_dir) }
 end
 
-scm_revision = helper.app_deploy[:scm][:revision]
+scm_revision = helper.app_source[:revision]
 execute "Cloning repository" do
     user "root"
     command "git clone" + \
       (scm_revision.nil? ? "" : " --single-branch --branch #{scm_revision}" )+ \
-      " #{helper.app_deploy[:scm][:repository]} #{helper.repository_dir}"
+      " #{helper.app_source[:url]} #{helper.repository_dir}"
 end
 
 ##########

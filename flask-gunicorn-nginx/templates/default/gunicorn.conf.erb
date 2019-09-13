@@ -1,16 +1,16 @@
 [supervisord]
-logfile=<%= File.join(helper.app_deploy[:deploy_to], "log/supervisord.log") %>
+logfile=<%= File.join(helper.deploy_to, "log/supervisord.log") %>
 
 [program:gunicorn]
 command=<%= helper.gunicorn_start_path %>
-directory=<%= helper.app_dir %>
+directory=<%= @app_dir %>
 autostart=true
 autorestart=unexpected
 startsecs=1                   ; number of secs prog must stay running (def. 1)
 startretries=3                ; max # of serial start failures (default 3)
 exitcodes=0,2                 ; 'expected' exit codes for process (default 0,2)
 killasgroup=false             ; SIGKILL the UNIX process group (def false)
-stdout_logfile=<%= File.join(helper.app_deploy[:deploy_to], "log/gunicorn.log") %>
+stdout_logfile=<%= File.join(helper.deploy_to, "log/gunicorn.log") %>
 stdout_logfile_maxbytes=50MB   ; max # logfile bytes b4 rotation (default 50MB)
 stdout_logfile_backups=10     ; # of stdout logfile backups (default 10)
 redirect_stderr=true

@@ -2,7 +2,7 @@
 ## ENV Varriables ##
 ####################
 
-helper.app_deploy[:environment_variables].each do |key, value|
+helper.app[:environment].each do |key, value|
   Chef::Log.info "Setting #{key} to \"#{value}\"" 
   ENV[key] = value
 end
@@ -26,7 +26,7 @@ end
 execute "Upgrade database" do
   user "root"
   cwd helper.app_dir
-  command  "LC_ALL=#{helper.app_deploy[:environment_variables]["LC_ALL"]} flask db upgrade"
+  command  "LC_ALL=#{helper.app[:environment][:LC_ALL]} flask db upgrade"
 end
 
 ###############################
