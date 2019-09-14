@@ -86,9 +86,9 @@ template helper.gunicorn_start_path do
   variables app_dir: app_dir
 end
 
-execute "Start supervisord if not running" do
+execute "Start supervisord if not running and stop gunicorn program" do
   user "root"
-  command "pgrep supervisord > /dev/null || supervisord -c /etc/supervisord.conf"
+  command "pgrep supervisord > /dev/null || ( supervisord -c /etc/supervisord.conf && supervisorctl -c /etc/supervisord.conf stop gunicorn )"
 end
 
 #########

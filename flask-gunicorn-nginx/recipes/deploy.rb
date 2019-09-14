@@ -11,6 +11,11 @@ end
 ## Update App ##
 ################
 
+execute "Stop gunicorn program" do
+  user "root"
+  command "supervisorctl -c /etc/supervisord.conf stop gunicorn"
+end
+
 execute "Pull code" do
   user "root"
   cwd helper.app_dir
