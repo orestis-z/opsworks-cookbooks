@@ -111,6 +111,14 @@ execute "Add bitbucket.org to known hosts" do
     command "ssh-keyscan -H bitbucket.org > ~/.ssh/known_hosts"
 end
 
+bash "Set dummy email & name to GIT config" do
+    user "root"
+    code <<-EOS
+      git config --global user.email "dummy@mail.com"
+      git config --global user.name "dummy"
+    EOS
+end
+
 directory helper.repository_dir do
   action :delete
   recursive true
