@@ -9,6 +9,7 @@ source venv/bin/activate
 
 exec gunicorn \
     <%= node['flask-gunicorn-nginx']['wsgi_module'] %> \
+    --name "`git show --pretty=format:"%h %s" -s HEAD`"
     --workers=1 \
     --timeout=60 \
     --pid=<%= File.join(helper.deploy_to, "run/gunicorn-master.pid") %> \
