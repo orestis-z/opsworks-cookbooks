@@ -9,7 +9,7 @@ source venv/bin/activate
 
 exec gunicorn \
     <%= node['flask-gunicorn-nginx']['wsgi_module'] %> \
-    --name "`git show --pretty=format:"%h %s" -s HEAD`"
+    --name "`git show --pretty=format:"%h %s" -s HEAD`" \
     --workers=<%= node['flask-gunicorn-nginx']['gunicorn']["workers"] %> \
     --timeout=<%= node['flask-gunicorn-nginx']['gunicorn']["timeout"] %> \
     --log-level=<%= node['flask-gunicorn-nginx']['gunicorn']["log-level"] %> \

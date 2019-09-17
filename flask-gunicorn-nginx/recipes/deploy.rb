@@ -44,11 +44,9 @@ end
 ## Start Giunicorn and NGINX ##
 ###############################
 
-bash "Restart gunicorn under supervisor" do
+execute "Restart gunicorn under supervisor" do
   user "root"
-  code <<-EOS
-    supervisorctl -c /etc/supervisord.conf reread
-    supervisorctl -c /etc/supervisord.conf reload
+  code "supervisorctl -c /etc/supervisord.conf reload"
   EOS
 end
 
