@@ -16,10 +16,15 @@ execute "Stop gunicorn program" do
   command "supervisorctl -c /etc/supervisord.conf stop gunicorn"
 end
 
-execute "Pull code" do
+scm_revision = helper.app_source[:revision]
+bash "Pull code" do
   user "root"
   cwd helper.app_dir
-  command "git pull"
+  code <<-EOS
+    git fetch origin #{scm_revision.nil? ? "master" : scm_revision}
+    git reset --hard FETCH_HEAD
+    git clean -df
+  EOS
 end
 
 bash "Install PIP requirements" do
