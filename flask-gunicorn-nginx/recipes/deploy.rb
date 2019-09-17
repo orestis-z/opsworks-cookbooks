@@ -46,8 +46,7 @@ end
 
 execute "Restart gunicorn under supervisor" do
   user "root"
-  code "supervisorctl -c /etc/supervisord.conf reload"
-  EOS
+  command "supervisorctl -c /etc/supervisord.conf reload"
 end
 
 service "nginx" do
