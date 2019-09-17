@@ -22,25 +22,34 @@ execute "Pull code" do
   command "git pull"
 end
 
-execute "Install PIP requirements" do
+bash "Install PIP requirements" do
   user "root"
   cwd helper.app_dir
-  command "pip install -r requirements.txt"
+  code <<-EOS
+    source venv/bin/activate
+    pip install -r requirements.txt
+  EOS
 end
 
-execute "Upgrade database" do
+bash "Upgrade database" do
   user "root"
   cwd helper.app_dir
-  command  "LC_ALL=#{helper.app[:environment][:LC_ALL]} flask db upgrade"
+  code  <<-EOS
+      source venv/bin/activate
+      LC_ALL=#{helper.app[:environment][:LC_ALL]} flask db upgrade
+    EOS
 end
 
 ###############################
 ## Start Giunicorn and NGINX ##
 ###############################
 
-execute "Restart gunicorn under supervisor" do
+bash "Restart gunicorn under supervisor" do
   user "root"
-  command "supervisorctl -c /etc/supervisord.conf reload"
+  code <<-EOS
+    supervisorctl -c /etc/supervisord.conf reread
+    supervisorctl -c /etc/supervisord.conf reload
+  EOS
 end
 
 service "nginx" do

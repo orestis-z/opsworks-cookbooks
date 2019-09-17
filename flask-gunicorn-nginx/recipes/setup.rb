@@ -21,7 +21,7 @@ end
 
 execute "Install PIP packages" do
     user "root"
-    command "python3 -m pip install --upgrade autoenv supervisor"
+    command "python3 -m pip install --upgrade supervisor"
 end
 
 #################
@@ -141,18 +141,4 @@ execute "Create venv" do
     user "root"
     cwd helper.app_dir
     command "python3 -m venv venv"
-end
-
-bash "Setup .env" do
-    user "root"
-    cwd helper.app_dir
-    code <<-EOS
-      touch .env
-      echo "source venv/bin/activate" >> .env
-    EOS
-end
-
-execute "Activate autoenv" do
-  user "root"
-  command "AUTOENV_ASSUME_YES=1 source `which activate.sh`"
 end
