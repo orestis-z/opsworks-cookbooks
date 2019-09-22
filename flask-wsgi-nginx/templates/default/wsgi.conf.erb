@@ -1,10 +1,10 @@
 [supervisord]
 logfile=<%= File.join(helper.deploy_to, "log/supervisord.log") %>
 
-[program:gunicorn]
-command=<%= helper.gunicorn_start_path %>
+[program:wsgi]
+command=<%= helper.wsgi_start_path %>
 directory=<%= @app_dir %>
 autostart=true
 autorestart=unexpected
-stdout_logfile=<%= File.join(helper.deploy_to, "log/gunicorn.log") %>
+stdout_logfile=<%= File.join(helper.deploy_to, "log/wsgi.log") %>
 redirect_stderr=true

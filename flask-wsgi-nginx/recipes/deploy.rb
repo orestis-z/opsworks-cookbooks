@@ -11,9 +11,9 @@ end
 ## Update App ##
 ################
 
-execute "Stop gunicorn program" do
+execute "Stop wsgi program" do
   user "root"
-  command "supervisorctl -c /etc/supervisord.conf stop gunicorn"
+  command "supervisorctl -c /etc/supervisord.conf stop wsgi"
 end
 
 scm_revision = helper.app_source[:revision]
@@ -49,7 +49,7 @@ end
 ## Start Giunicorn and NGINX ##
 ###############################
 
-execute "Restart gunicorn under supervisor" do
+execute "Restart wsgi under supervisor" do
   user "root"
   command "supervisorctl -c /etc/supervisord.conf reload"
 end

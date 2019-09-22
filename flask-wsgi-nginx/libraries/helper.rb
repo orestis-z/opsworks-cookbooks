@@ -6,23 +6,27 @@ class BaseHelper
   end
 
   def deploy_to
-    @node["flask-gunicorn-nginx"][:project_root]
+    @node["flask-wsgi-nginx"][:project_root]
   end
 
   def repository_dir
     File.join(deploy_to, "current")
   end
 
-  def gunicorn_syslog
-    "unix://" + File.join(deploy_to, "log/gunicorn.sock")
+  def wsgi_syslog
+    "unix://" + File.join(deploy_to, "log/wsgi.sock")
   end
 
-  def gunicorn_start_path
-    File.join(deploy_to, "bin/gunicorn-start.sh")
+  def wsgi_socket
+    "unix://" + File.join(deploy_to, "wsgi.sock")
   end
 
-  def gunicorn_supervisor_conf_path
-    File.join(deploy_to, "etc/gunicorn.conf")
+  def wsgi_start_path
+    File.join(deploy_to, "bin/wsgi-start.sh")
+  end
+
+  def wsgi_supervisor_conf_path
+    File.join(deploy_to, "etc/wsgi.conf")
   end
 end
 
@@ -47,7 +51,7 @@ class Helper < BaseHelper
 end
 
 def app
-  appshortname = node["flask-gunicorn-nginx"][:appshortname]
+  appshortname = node["flask-wsgi-nginx"][:appshortname]
   search("aws_opsworks_app", "shortname:#{appshortname}").first
 end
 

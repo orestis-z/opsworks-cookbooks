@@ -1,5 +1,5 @@
 upstream python_backend {
-    server <%= helper.gunicorn_syslog %>;
+    server <%= helper.wsgi_syslog %>;
 }
 
 server {
@@ -14,24 +14,29 @@ server {
         deny all;
     }
     
-    <% if node["flask-gunicorn-nginx"]["nginx"]["allowed_user_agents"].length() > 0 %>
+    <% if node["flask-wsgi-nginx"]["nginx"]["allowed_user_agents"].length() > 0 %>
     # Redirect only allowed user agents
     set $pass 0;
     <% end %>
-    <% node["flask-gunicorn-nginx"]["nginx"]["allowed_user_agents"].each do |v| %>
+    <% node["flask-wsgi-nginx"]["nginx"]["allowed_user_agents"].each do |v| %>
     if ($http_user_agent ~ "<%= v %>") {
         set $pass 1;
     }
     <% end %>
-    <% if node["flask-gunicorn-nginx"]["nginx"]["allowed_user_agents"].length() >0 %>
+    <% if node["flask-wsgi-nginx"]["nginx"]["allowed_user_agents"].length() > 0 %>
     if ($pass = 0) {
       return 403;
     }
     <% end %>
     
     location / {
-        # Proxy pass directive must be the same port on which the gunicorn process is listening.
+        <% if node["flask-wsgi-nginx"]["wsgi"]["server"] == "uwsgi" %>
+        include uwsgi_params;
+        uwsgi_pass unix:/home/sammy/myproject/myproject.sock;
+        <% else %>
+        # Proxy pass directive must be the same port on which the wsgi process is listening.
         proxy_pass http://127.0.0.1:8000;
+        <% end %>
 
         # For SSE (https://stackoverflow.com/questions/13672743/eventsource-server-sent-events-through-nginx)
         proxy_set_header Connection '';

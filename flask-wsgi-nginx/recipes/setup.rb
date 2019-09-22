@@ -28,10 +28,23 @@ end
 ## Create dirs ##
 #################
 
-["bin", "log", "etc", "run"].each do |folder|
+["bin", "log", "etc"].each do |folder|
   directory File.join(helper.deploy_to, folder) do
     recursive true
   end
+end
+
+
+#################
+## Shared libs ##
+#################
+
+bash "Register shared libraries" do
+  user "root"
+  code <<-EOS
+    echo /opt/chef/embedded/lib/ > /etc/ld.so.conf.d/custom.conf
+    ldconfig -f /etc/ld.so.conf.d/custom.conf
+  EOS
 end
 
 ###########
@@ -67,28 +80,28 @@ bash "Creating default supervisord configuration file" do
   code <<-EOS
     echo_supervisord_conf > /etc/supervisord.conf
     echo "[include]" >> /etc/supervisord.conf
-    echo "files = #{helper.gunicorn_supervisor_conf_path}" >> /etc/supervisord.conf
+    echo "files = #{helper.wsgi_supervisor_conf_path}" >> /etc/supervisord.conf
   EOS
 end
 
 app_dir = helper.app_dir
 
 # supervisord configuration for Gunicorn
-template helper.gunicorn_supervisor_conf_path do
-  source "gunicorn.conf.erb"
+template helper.wsgi_supervisor_conf_path do
+  source "wsgi.conf.erb"
   variables app_dir: app_dir
 end
 
-# gunicorn launch file
-template helper.gunicorn_start_path do
+# wsgi launch file
+template helper.wsgi_start_path do
   mode "0700"
-  source "gunicorn-start.sh.erb"
+  source "wsgi-start.sh.erb"
   variables app_dir: app_dir
 end
 
-execute "Start supervisord if not running and stop gunicorn program" do
+execute "Start supervisord if not running and stop wsgi program" do
   user "root"
-  command "pgrep supervisord > /dev/null || ( supervisord -c /etc/supervisord.conf && supervisorctl -c /etc/supervisord.conf stop gunicorn )"
+  command "pgrep supervisord > /dev/null || ( supervisord -c /etc/supervisord.conf && supervisorctl -c /etc/supervisord.conf stop wsgi )"
 end
 
 #########
