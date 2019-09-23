@@ -7,8 +7,6 @@ execute "Install amazon-linux-extras packages" do
   command "amazon-linux-extras install epel"
 end
 
-package "nginx"
-
 execute "Install yum packages" do
   user "root"
   command "yum install -y python36 python36-devel.x86_64 python36-pip postgresql-devel.x86_64"
@@ -42,14 +40,33 @@ end
 bash "Register shared libraries" do
   user "root"
   code <<-EOS
-    echo /opt/chef/embedded/lib/ > /etc/ld.so.conf.d/custom.conf
-    ldconfig -f /etc/ld.so.conf.d/custom.conf
+    cp -P /opt/chef/embedded/lib/libiconv.so* /lib64/ # required for uwsgi
+    ldconfig
   EOS
 end
 
 ###########
 ## NGINX ##
 ###########
+
+if node["flask-wsgi-nginx"]["nginx"]["build_from_source"]
+  # nginx installation file
+  template helper.nginx_install_file do
+    source "install-nginx.sh.erb"
+  end
+
+  execute "Install nginx from source" do
+    user "root"
+    command "sh #{helper.nginx_install_file}"
+  end
+else
+  package "nginx"
+end
+
+# Create systemd unit file for NGINX
+template "/etc/systemd/system/nginx.service" do
+  source "nginx.service.erb"
+end
 
 # primary NGINX configuration file
 template "/etc/nginx/nginx.conf" do

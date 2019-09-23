@@ -17,16 +17,16 @@ class BaseHelper
     "unix://" + File.join(deploy_to, "log/wsgi.sock")
   end
 
-  def wsgi_socket
-    "unix://" + File.join(deploy_to, "wsgi.sock")
-  end
-
   def wsgi_start_path
     File.join(deploy_to, "bin/wsgi-start.sh")
   end
 
   def wsgi_supervisor_conf_path
     File.join(deploy_to, "etc/wsgi.conf")
+  end
+
+  def nginx_install_file
+    File.join(deploy_to, "bin/install-nginx.sh")
   end
 end
 

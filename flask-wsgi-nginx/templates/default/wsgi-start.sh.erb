@@ -12,21 +12,21 @@ exec gunicorn \
     <%= node['flask-wsgi-nginx']['wsgi']['module'] %> \
     --name "`git show --pretty=format:"%h %s" -s HEAD`" \
     --workers=<%= node['flask-wsgi-nginx']['wsgi']["workers"] %> \
-    --timeout=<%= node['flask-wsgi-nginx']['wsgi']["worker-timeout"] %> \
-    --log-level=<%= node['flask-wsgi-nginx']['wsgi']["log-level"] %> \
-    --worker-class=<%= node['flask-wsgi-nginx']['wsgi']["worker-class"] %> \
+    --timeout=<%= node['flask-wsgi-nginx']['wsgi']["worker_timeout"] %> \
+    --log-level=<%= node['flask-wsgi-nginx']['wsgi']["log_level"] %> \
+    --worker-class=<%= node['flask-wsgi-nginx']['wsgi']["worker_class"] %> \
     --log-syslog-to=<%= helper.wsgi_syslog %>
 <% elsif node["flask-wsgi-nginx"]["wsgi"]["server"] == "uwsgi" %>
 exec uwsgi \
     --module <%= node['flask-wsgi-nginx']['wsgi']['module'] %> \
-    --socket <%= helper.wsgi_socket %> \
-    --chmod-socket 666 \
-    --vacuum=true \
-    --die-on-term=true \
+    --socket /tmp/wsgi.sock \
+    --chmod-socket \
+    --vacuum \
+    --die-on-term \
     --procname "`git show --pretty=format:"%h %s" -s HEAD`" \
     --workers=<%= node['flask-wsgi-nginx']['wsgi']["workers"] %> \
     <% if node["flask-wsgi-nginx"]["wsgi"]["async"] > 0 %>
     --async <%= node["flask-wsgi-nginx"]["wsgi"]["async"] %> \
-    --<%= node["flask-wsgi-nginx"]["wsgi"]["worker-class"] %> \
+    --<%= node["flask-wsgi-nginx"]["wsgi"]["worker_class"] %>
     <% end %>
 <% end %>

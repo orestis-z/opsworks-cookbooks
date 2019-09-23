@@ -32,14 +32,32 @@ server {
     location / {
         <% if node["flask-wsgi-nginx"]["wsgi"]["server"] == "uwsgi" %>
         include uwsgi_params;
-        uwsgi_pass unix:/home/sammy/myproject/myproject.sock;
+        uwsgi_pass unix:///tmp/wsgi.sock;
         <% else %>
         # Proxy pass directive must be the same port on which the wsgi process is listening.
         proxy_pass http://127.0.0.1:8000;
         <% end %>
 
-        # For SSE (https://stackoverflow.com/questions/13672743/eventsource-server-sent-events-through-nginx)
+        <% if node["flask-wsgi-nginx"]["nginx"]["enable_sse"] %>
+        <!-- https://stackoverflow.com/questions/13672743/eventsource-server-sent-events-through-nginx -->
         proxy_set_header Connection '';
         proxy_http_version 1.1;
+
+        <% if node["flask-wsgi-nginx"]["wsgi"]["server"] == "uwsgi" %>
+        chunked_transfer_encoding off;
+        uwsgi_buffering off;
+        chunked_transfer_encoding off;
+        proxy_cache off;
+        <% end %>
+
+        # # activate event source mode for this location
+        # push_stream_subscriber eventsource;
+
+        # # positional channel path
+        # push_stream_channels_path                   $1;
+
+        # # ping frequency
+        # push_stream_ping_message_interval           10s; -->
+        <% end %>
     }
 }
