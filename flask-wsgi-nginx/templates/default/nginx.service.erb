@@ -2,6 +2,8 @@
 Description=A high performance web server and a reverse proxy server
 After=network.target
 
+<% @nginx = node["flask-wsgi-nginx"]["nginx"] %>
+
 [Service]
 Type=forking
 PIDFile=/run/nginx.pid
@@ -9,8 +11,8 @@ PIDFile=/run/nginx.pid
 # SELinux context. This might happen when running `nginx -t` from the cmdline.
 # https://bugzilla.redhat.com/show_bug.cgi?id=1268621
 ExecStartPre=/usr/bin/rm -f /run/nginx.pid
-ExecStartPre=/usr/sbin/nginx -t -q -g 'daemon on; master_process on;'<% if node["flask-wsgi-nginx"]["nginx"]["enable_sse"] %> -c ~/nginx-push-stream-module/misc/nginx.conf<% end %>
-ExecStart=/usr/sbin/nginx -g 'daemon on; master_process on;'<% if node["flask-wsgi-nginx"]["nginx"]["enable_sse"] %> -c ~/nginx-push-stream-module/misc/nginx.conf<% end %>
+ExecStartPre=/usr/sbin/nginx -t -q -g 'daemon on; master_process on;'<% if @nginx["enable_sse"] and @nginx["build_from_source"] %> -c ~/nginx-push-stream-module/misc/nginx.conf<% end %>
+ExecStart=/usr/sbin/nginx -g 'daemon on; master_process on;'<% if @nginx["enable_sse"] and @nginx["build_from_source"] %> -c ~/nginx-push-stream-module/misc/nginx.conf<% end %>
 ExecReload=/bin/kill -s HUP $MAINPID
 KillSignal=SIGQUIT
 TimeoutStopSec=5

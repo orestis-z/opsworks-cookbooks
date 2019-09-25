@@ -8,3 +8,11 @@ autostart=true
 autorestart=unexpected
 stdout_logfile=<%= File.join(helper.deploy_to, "log/wsgi.log") %>
 redirect_stderr=true
+
+<% @memmon = node["flask-wsgi-nginx"]["supervisor"]["memmon"] %>
+
+<% if @memmon["enabled"] %>
+[eventlistener:memmon]
+command=memmon --program wsgi=<%= @memmon["max_rss"] %>MB --cumulative --email=<%= @memmon["email"] %>
+events=TICK_60
+<% end %>

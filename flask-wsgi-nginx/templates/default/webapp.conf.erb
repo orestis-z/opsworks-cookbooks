@@ -2,6 +2,9 @@ upstream python_backend {
     server <%= helper.wsgi_syslog %>;
 }
 
+<% @nginx = node["flask-wsgi-nginx"]["nginx"] %>
+<% @wsgi = node["flask-wsgi-nginx"]["wsgi"] %>
+
 server {
     listen 80 default_server;
     server_name _;
@@ -14,23 +17,23 @@ server {
         deny all;
     }
     
-    <% if node["flask-wsgi-nginx"]["nginx"]["allowed_user_agents"].length() > 0 %>
+    <% if @nginx["allowed_user_agents"].length() > 0 %>
     # Redirect only allowed user agents
     set $pass 0;
     <% end %>
-    <% node["flask-wsgi-nginx"]["nginx"]["allowed_user_agents"].each do |v| %>
+    <% @nginx["allowed_user_agents"].each do |v| %>
     if ($http_user_agent ~ "<%= v %>") {
         set $pass 1;
     }
     <% end %>
-    <% if node["flask-wsgi-nginx"]["nginx"]["allowed_user_agents"].length() > 0 %>
+    <% if @nginx["allowed_user_agents"].length() > 0 %>
     if ($pass = 0) {
       return 403;
     }
     <% end %>
     
     location / {
-        <% if node["flask-wsgi-nginx"]["wsgi"]["server"] == "uwsgi" %>
+        <% if @wsgi["server"] == "uwsgi" %>
         include uwsgi_params;
         uwsgi_pass unix:///tmp/wsgi.sock;
         <% else %>
@@ -38,12 +41,12 @@ server {
         proxy_pass http://127.0.0.1:8000;
         <% end %>
 
-        <% if node["flask-wsgi-nginx"]["nginx"]["enable_sse"] %>
-        <!-- https://stackoverflow.com/questions/13672743/eventsource-server-sent-events-through-nginx -->
+        <% if @nginx["enable_sse"] %>
+        # https://stackoverflow.com/questions/13672743/eventsource-server-sent-events-through-nginx
         proxy_set_header Connection '';
         proxy_http_version 1.1;
 
-        <% if node["flask-wsgi-nginx"]["wsgi"]["server"] == "uwsgi" %>
+        <% if @wsgi["server"] == "uwsgi" %>
         chunked_transfer_encoding off;
         uwsgi_buffering off;
         chunked_transfer_encoding off;

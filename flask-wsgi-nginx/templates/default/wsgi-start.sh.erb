@@ -7,27 +7,29 @@ cd <%= @app_dir %>
 
 source venv/bin/activate
 
-<% if node["flask-wsgi-nginx"]["wsgi"]["server"] == "gunicorn" %>
+<% @wsgi = node["flask-wsgi-nginx"]["wsgi"] %>
+
+<% if @wsgi["server"] == "gunicorn" %>
 exec gunicorn \
-    <%= node['flask-wsgi-nginx']['wsgi']['module'] %> \
+    <%= @wsgi["module"] %> \
     --name "`git show --pretty=format:"%h %s" -s HEAD`" \
-    --workers=<%= node['flask-wsgi-nginx']['wsgi']["workers"] %> \
-    --timeout=<%= node['flask-wsgi-nginx']['wsgi']["worker_timeout"] %> \
-    --graceful-timeout=<%= node['flask-wsgi-nginx']['wsgi']["graceful_timeout"] %> \
-    --log-level=<%= node['flask-wsgi-nginx']['wsgi']["log_level"] %> \
-    --worker-class=<%= node['flask-wsgi-nginx']['wsgi']["worker_class"] %> \
+    --workers=<%= @wsgi["workers"] %> \
+    --timeout=<%= @wsgi["worker_timeout"] %> \
+    --graceful-timeout=<%= @wsgi["graceful_timeout"] %> \
+    --log-level=<%= @wsgi["log_level"] %> \
+    --worker-class=<%= @wsgi["worker_class"] %> \
     --log-syslog-to=<%= helper.wsgi_syslog %>
-<% elsif node["flask-wsgi-nginx"]["wsgi"]["server"] == "uwsgi" %>
+<% elsif @wsgi["server"] == "uwsgi" %>
 exec uwsgi \
-    --module <%= node['flask-wsgi-nginx']['wsgi']['module'] %> \
+    --module <%= @wsgi["module"] %> \
     --socket /tmp/wsgi.sock \
     --chmod-socket \
     --vacuum \
     --die-on-term \
     --procname "`git show --pretty=format:"%h %s" -s HEAD`" \
-    --workers=<%= node['flask-wsgi-nginx']['wsgi']["workers"] %> \
-    <% if node["flask-wsgi-nginx"]["wsgi"]["async"] > 0 %>
-    --async <%= node["flask-wsgi-nginx"]["wsgi"]["async"] %> \
-    --<%= node["flask-wsgi-nginx"]["wsgi"]["worker_class"] %>
+    --workers=<%= @wsgi["workers"] %> \
+    <% if @wsgi["async"] > 0 %>
+    --async <%= @wsgi["async"] %> \
+    --<%= @wsgi["worker_class"] %>
     <% end %>
 <% end %>

@@ -19,7 +19,7 @@ end
 
 execute "Install PIP packages" do
     user "root"
-    command "python3 -m pip install --upgrade supervisor"
+    command "python3 -m pip install --upgrade supervisor superlance"
 end
 
 #################
@@ -85,7 +85,7 @@ end
 
 service "nginx" do
   supports :status => true
-  action [:enable, :start]
+  action [:reload, :enable, :start]
 end
 
 ################
