@@ -10,7 +10,7 @@ PIDFile=/run/nginx.pid
 # Nginx will fail to start if /run/nginx.pid already exists but has the wrong
 # SELinux context. This might happen when running `nginx -t` from the cmdline.
 # https://bugzilla.redhat.com/show_bug.cgi?id=1268621
-ExecStartPre=/usr/bin/rm -f /run/nginx.pid
+ExecStartPre=<%= node['platform_family'] == "rhel" ? "/usr/bin/rm" : "/bin/rm" %> -f /run/nginx.pid
 ExecStartPre=/usr/sbin/nginx -t -q -g 'daemon on; master_process on;'<% if @nginx["enable_sse"] and @nginx["build_from_source"] %> -c ~/nginx-push-stream-module/misc/nginx.conf<% end %>
 ExecStart=/usr/sbin/nginx -g 'daemon on; master_process on;'<% if @nginx["enable_sse"] and @nginx["build_from_source"] %> -c ~/nginx-push-stream-module/misc/nginx.conf<% end %>
 ExecReload=/bin/kill -s HUP $MAINPID

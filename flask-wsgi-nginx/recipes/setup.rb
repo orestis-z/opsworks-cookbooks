@@ -2,24 +2,44 @@
 ## Install Packages ##
 ######################
 
-execute "Install amazon-linux-extras packages" do
-  user "root"
-  command "amazon-linux-extras install epel"
-end
+case node['platform_family']
+  # RHEL platforms (redhat, centos, scientific, etc)
+  when 'rhel'
+    execute "Install amazon-linux-extras packages" do
+      user "root"
+      command "amazon-linux-extras install epel"
+    end
 
-execute "Install yum packages" do
-  user "root"
-  command "yum install -y python36 python36-devel.x86_64 python36-pip postgresql-devel.x86_64"
-end
+    execute "Install yum packages" do
+      user "root"
+      command "yum install -y python36 python36-devel.x86_64 python36-pip postgresql-devel.x86_64"
+    end
 
-execute "Upgrade PIP" do
-  user "root"
-  command "python3 -m pip install --upgrade pip"
+    execute "Upgrade PIP" do
+      user "root"
+      command "python3 -m pip install --upgrade pip"
+    end
+  # debian-ish platforms (debian, ubuntu, linuxmint)
+  when 'debian'
+    bash "Install python3.7" do
+      user "root"
+      code <<-EOS
+        apt-get install -y python3.7
+        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1
+        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 2
+        apt-get install -y python3.7-dev python3-pip python3.7-venv
+      EOS
+    end
+
+    execute "Install apt packages" do
+      user "root"
+      command "apt install -y libpq-dev"
+    end
 end
 
 execute "Install PIP packages" do
     user "root"
-    command "python3 -m pip install --upgrade supervisor superlance"
+    command "python3 -m pip install --upgrade wheel supervisor superlance"
 end
 
 #################
@@ -79,8 +99,13 @@ end
 
 file "/var/log/nginx/error.log" do
   mode '0644'
-  owner "nginx"
-  group "nginx"
+  owner node['platform_family'] == "rhel" ? "nginx" : "www-data"
+  group node['platform_family'] == "rhel" ? "nginx" : "www-data"
+end
+
+execute "Reload nginx config file" do
+  user "root"
+  command "systemctl daemon-reload"
 end
 
 service "nginx" do
