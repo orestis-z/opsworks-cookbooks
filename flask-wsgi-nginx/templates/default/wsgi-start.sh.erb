@@ -12,12 +12,8 @@ source venv/bin/activate
 <% if @wsgi["server"] == "gunicorn" %>
 exec gunicorn \
     <%= @wsgi["module"] %> \
+    --config = <%= @wsgi["config"] %> \
     --name "`git show --pretty=format:"%h %s" -s HEAD`" \
-    --workers=<%= @wsgi["workers"] %> \
-    --timeout=<%= @wsgi["worker_timeout"] %> \
-    --graceful-timeout=<%= @wsgi["graceful_timeout"] %> \
-    --log-level=<%= @wsgi["log_level"] %> \
-    --worker-class=<%= @wsgi["worker_class"] %> \
     --log-syslog-to=<%= helper.wsgi_syslog %>
 <% elsif @wsgi["server"] == "uwsgi" %>
 exec uwsgi \

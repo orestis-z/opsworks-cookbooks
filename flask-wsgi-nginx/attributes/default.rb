@@ -7,12 +7,6 @@ default["flask-wsgi-nginx"]["app_subfolder"] = ""
 
 default["flask-wsgi-nginx"]["wsgi"]["server"] = "gunicorn"
 default["flask-wsgi-nginx"]["wsgi"]["module"] = ""
-default["flask-wsgi-nginx"]["wsgi"]["workers"] = 1
-default["flask-wsgi-nginx"]["wsgi"]["worker_timeout"] = 30
-default["flask-wsgi-nginx"]["wsgi"]["graceful_timeout"] = 30
-default["flask-wsgi-nginx"]["wsgi"]["log_level"] = "INFO"
-default["flask-wsgi-nginx"]["wsgi"]["async"] = 0
-default["flask-wsgi-nginx"]["wsgi"]["worker_class"] = "sync"
 
 # nginx
 
