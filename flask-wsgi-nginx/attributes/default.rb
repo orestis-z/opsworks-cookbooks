@@ -2,6 +2,10 @@
 
 default["flask-wsgi-nginx"]["project_root"] = "/srv/www/"
 default["flask-wsgi-nginx"]["app_subfolder"] = ""
+default["flask-wsgi-nginx"]["apt_packages"] = []
+
+# flask
+default["flask-wsgi-nginx"]["flask"]["db"] = false
 
 # wsgi
 

@@ -5,25 +5,23 @@
 
 cd <%= @app_dir %>
 
-source venv/bin/activate
-
 <% @wsgi = node["flask-wsgi-nginx"]["wsgi"] %>
 
 <% if @wsgi["server"] == "gunicorn" %>
-exec gunicorn \
+exec pipenv run gunicorn \
     <%= @wsgi["module"] %> \
-    --config = <%= @wsgi["config"] %> \
+    --config <%= @wsgi["config"] %> \
     --name "`git show --pretty=format:"%h %s" -s HEAD`" \
-    --log-syslog-to=<%= helper.wsgi_syslog %>
+    --log-syslog-to <%= helper.wsgi_syslog %>
 <% elsif @wsgi["server"] == "uwsgi" %>
-exec uwsgi \
+exec pipenv run uwsgi \
     --module <%= @wsgi["module"] %> \
     --socket /tmp/wsgi.sock \
     --chmod-socket \
     --vacuum \
     --die-on-term \
     --procname "`git show --pretty=format:"%h %s" -s HEAD`" \
-    --workers=<%= @wsgi["workers"] %> \
+    --workers <%= @wsgi["workers"] %> \
     <% if @wsgi["async"] > 0 %>
     --async <%= @wsgi["async"] %> \
     --<%= @wsgi["worker_class"] %>

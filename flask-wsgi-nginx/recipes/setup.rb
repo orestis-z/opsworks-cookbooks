@@ -31,15 +31,15 @@ case node['platform_family']
       EOS
     end
 
-    execute "Install apt packages" do
+    execute "Install apt-get packages" do
       user "root"
-      command "apt install -y libpq-dev"
+      command "apt-get install -y libpq-dev " + node["flask-wsgi-nginx"]["apt_packages"].join(" ")
     end
 end
 
 execute "Install PIP packages" do
     user "root"
-    command "python3 -m pip install --upgrade wheel supervisor superlance"
+    command "python3 -m pip install --upgrade wheel supervisor superlance pipenv"
 end
 
 #################

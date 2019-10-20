@@ -20,22 +20,20 @@ bash "Pull code" do
   EOS
 end
 
-bash "Install PIP requirements" do
+execute "Install PIP requirements" do
   user "root"
   cwd helper.app_dir
-  code <<-EOS
-    source venv/bin/activate
-    pip install -r requirements.txt
-  EOS
+  command "pipenv install --skip-lock"
 end
 
-bash "Upgrade database" do
-  user "root"
-  cwd helper.app_dir
-  code  <<-EOS
-      source venv/bin/activate
-      LC_ALL=#{helper.app[:environment][:LC_ALL]} flask db upgrade
-    EOS
+if node["flask-wsgi-nginx"]["flask"]["db"]
+  bash "Upgrade database" do
+    user "root"
+    cwd helper.app_dir
+    code  <<-EOS
+        LC_ALL=#{helper.app[:environment][:LC_ALL]} pipenv run flask db upgrade
+      EOS
+  end
 end
 
 ###############################
