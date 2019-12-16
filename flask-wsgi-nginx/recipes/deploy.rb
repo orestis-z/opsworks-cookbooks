@@ -10,30 +10,22 @@ execute "Stop wsgi program" do
 end
 
 scm_revision = helper.app_source[:revision]
-bash "Pull code" do
+bash "Download code bundle" do
   user "root"
   cwd helper.app_dir
   code <<-EOS
-    git fetch origin #{scm_revision.nil? ? "master" : scm_revision}
-    git reset --hard FETCH_HEAD
-    git clean -df
+    rm -r ./*
+    KEY=`aws s3 ls #{node["flask-wsgi-nginx"][:s3_build_uri]} | sort | tail -n 1 | awk '{print $4}'`
+    aws s3 cp #{node["flask-wsgi-nginx"][:s3_build_uri]}$KEY .
+    unzip $KEY -d .
+    rm $KEY
   EOS
 end
 
 execute "Install PIP requirements" do
   user "root"
   cwd helper.app_dir
-  command "pipenv install --skip-lock"
-end
-
-if node["flask-wsgi-nginx"]["flask"]["db"]
-  bash "Upgrade database" do
-    user "root"
-    cwd helper.app_dir
-    code  <<-EOS
-        LC_ALL=#{helper.app[:environment][:LC_ALL]} pipenv run flask db upgrade
-      EOS
-  end
+  command "python3 -m pip install -r requirements.txt --ignore-installed"
 end
 
 ###############################

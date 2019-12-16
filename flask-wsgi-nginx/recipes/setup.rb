@@ -15,10 +15,6 @@ case node['platform_family']
       command "yum install -y python36 python36-devel.x86_64 python36-pip postgresql-devel.x86_64"
     end
 
-    execute "Upgrade PIP" do
-      user "root"
-      command "python3 -m pip install --upgrade pip"
-    end
   # debian-ish platforms (debian, ubuntu, linuxmint)
   when 'debian'
     bash "Install python3.7" do
@@ -27,31 +23,30 @@ case node['platform_family']
         apt-get install -y python3.7
         update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1
         update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 2
-        apt-get install -y python3.7-dev python3-pip python3.7-venv
+        apt-get install -y python3.7-dev python3-pip python3-apt
       EOS
     end
 
     execute "Install apt-get packages" do
       user "root"
-      command "apt-get install -y libpq-dev " + node["flask-wsgi-nginx"]["apt_packages"].join(" ")
+      command "apt-get install -y libpq-dev awscli unzip" + node["flask-wsgi-nginx"]["apt_packages"].join(" ")
     end
 end
 
 execute "Install PIP packages" do
     user "root"
-    command "python3 -m pip install --upgrade wheel supervisor superlance pipenv"
+    command "python3 -m pip install --upgrade wheel supervisor superlance pip"
 end
 
 #################
 ## Create dirs ##
 #################
 
-["bin", "log", "etc"].each do |folder|
+["bin", "log", "etc", "current"].each do |folder|
   directory File.join(helper.deploy_to, folder) do
     recursive true
   end
 end
-
 
 #################
 ## Shared libs ##
@@ -144,56 +139,4 @@ end
 execute "Start supervisord if not running and stop wsgi program" do
   user "root"
   command "pgrep supervisord > /dev/null || ( supervisord -c /etc/supervisord.conf && supervisorctl -c /etc/supervisord.conf stop wsgi )"
-end
-
-#########
-## GIT ##
-#########
-
-bash "Add SSH key for GIT" do
-    user "root"
-    code <<-EOS
-      touch ~/.ssh/id_rsa
-      chmod 400 ~/.ssh/id_rsa
-      echo '#{helper.app_source[:ssh_key]}' >> ~/.ssh/id_rsa
-      eval $(ssh-agent -s)
-      ssh-add ~/.ssh/id_rsa
-    EOS
-end
-
-execute "Add bitbucket.org to known hosts" do
-    user "root"
-    command "ssh-keyscan -H bitbucket.org > ~/.ssh/known_hosts"
-end
-
-bash "Set dummy email & name to GIT config" do
-    user "root"
-    code <<-EOS
-      git config --global user.email "dummy@mail.com"
-      git config --global user.name "dummy"
-    EOS
-end
-
-directory helper.repository_dir do
-  action :delete
-  recursive true
-  only_if { ::File.directory?(helper.repository_dir) }
-end
-
-scm_revision = helper.app_source[:revision]
-execute "Cloning repository" do
-    user "root"
-    command "git clone" + \
-      (scm_revision.nil? ? "" : " --single-branch --branch #{scm_revision}" )+ \
-      " #{helper.app_source[:url]} #{helper.repository_dir}"
-end
-
-##########
-## VENV ##
-##########
-
-execute "Create venv" do
-    user "root"
-    cwd helper.app_dir
-    command "python3 -m venv venv"
 end
