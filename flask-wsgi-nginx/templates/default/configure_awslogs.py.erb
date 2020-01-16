@@ -1,0 +1,159 @@
+<% @awslogs = node["flask-wsgi-nginx"]["awslogs"] %>
+
+# from https://s3.amazonaws.com/aws-cloudwatch/downloads/awslogs-agent-setup-v1.0.py
+
+import os
+import configparser
+import re
+
+
+class SectionNotFoundError(Exception):
+    pass
+
+
+class ConfigFileWriter(object):
+    SECTION_REGEX = re.compile(r"\[(?P<header>[^]]+)\]")
+    OPTION_REGEX = re.compile(
+        r"(?P<option>[^:=\s][^:=]*)"
+        r"\s*(?P<vi>[:=])\s*"
+        r"(?P<value>.*)$"
+    )
+
+    def update_config(self, new_values, config_filename):
+        section_name = new_values.pop("__section__", "default")
+        if not os.path.isfile(config_filename):
+            self._create_file(config_filename)
+            self._write_new_section(section_name, new_values, config_filename)
+            return
+        with open(config_filename, "r") as f:
+            contents = f.readlines()
+        # We can only update a single section at a time so we first need
+        # to find the section in question
+        try:
+            self._update_section_contents(contents, section_name, new_values)
+            with open(config_filename, "w") as f:
+                f.write("".join(contents))
+        except SectionNotFoundError:
+            self._write_new_section(section_name, new_values, config_filename)
+
+    def _create_file(self, config_filename):
+        # Create the file as well as the parent dir if needed.
+        dirname, basename = os.path.split(config_filename)
+        if not os.path.isdir(dirname):
+            os.makedirs(dirname)
+        with os.fdopen(os.open(config_filename, os.O_WRONLY | os.O_CREAT, 0o600), "w"):
+            pass
+
+    def _write_new_section(self, section_name, new_values, config_filename):
+        with open(config_filename, "a") as f:
+            f.write("[%s]\n" % section_name)
+            for key, value in new_values.items():
+                f.write("%s = %s\n" % (key, value))
+
+    def _update_section_contents(self, contents, section_name, new_values):
+        new_values = new_values.copy()
+        # contents is a list of file line contents.
+        for i in range(len(contents)):
+            line = contents[i]
+            if line.strip().startswith(("#", ";")):
+                # This is a comment, so we can safely ignore this line.
+                continue
+            match = self.SECTION_REGEX.search(line)
+            if match is not None and self._matches_section(match,
+                                                           section_name):
+                break
+        else:
+            raise SectionNotFoundError(section_name)
+        # If we get here, then we've found the section.  We now need
+        # to figure out if we're updating a value or adding a new value.
+        i += 1
+        last_matching_line = i
+        for j in range(i, len(contents)):
+            line = contents[j]
+            match = self.OPTION_REGEX.search(line)
+            if match is not None:
+                last_matching_line = j
+                key_name = match.group(1).strip()
+                if key_name in new_values:
+                    new_line = "%s = %s\n" % (key_name, new_values[key_name])
+                    contents[j] = new_line
+                    del new_values[key_name]
+            elif self.SECTION_REGEX.search(line) is not None:
+                # We've hit a new section which means the config key is
+                # not in the section.  We need to add it here.
+                self._insert_new_values(line_number=last_matching_line,
+                                        contents=contents,
+                                        new_values=new_values)
+                return
+
+        if new_values:
+            if not contents[-1].endswith("\n"):
+                contents.append("\n")
+            self._insert_new_values(line_number=last_matching_line + 1,
+                                    contents=contents,
+                                    new_values=new_values)
+
+    def _insert_new_values(self, line_number, contents, new_values):
+        new_contents = []
+        for key, value in new_values.items():
+            new_contents.append("%s = %s\n" % (key, value))
+        contents.insert(line_number + 1, "".join(new_contents))
+
+    def _matches_section(self, match, section_name):
+        parts = section_name.split(" ")
+        unquoted_match = match.group(0) == "[%s]" % section_name
+        if len(parts) > 1:
+            quoted_match = match.group(0) == "[%s \" % s\"]" % (
+                parts[0], " ".join(parts[1:]))
+            return unquoted_match or quoted_match
+        return unquoted_match
+
+
+def _get_config(file_path):
+    """
+    Finds and parses the logs configuration file and returns all
+    of the data found within the file as a dictionary of
+    dictionaries, one for each profile section found in the
+    configuration file.
+
+    :returns: A dict with keys for each section found in the config
+        file and the value of each key being a dict containing name
+        value pairs found in that section.
+    """
+    config = {}
+    if file_path is not None:
+        file_path = os.path.expandvars(file_path)
+        file_path = os.path.expanduser(file_path)
+
+        cp = configparser.RawConfigParser()
+        cp.read(file_path)
+
+        for section in cp.sections():
+            config[section] = {}
+            for option in cp.options(section):
+                config_value = cp.get(section, option)
+                if config_value.startswith("\n"):
+                    # Then we need to parse the inner contents as
+                    # hierarchical.  We support a single level
+                    # of nesting for now.
+                    config_value = _parse_nested(config_value)
+                config[section][option] = config_value
+    return config
+
+
+def main():
+    file_path = "/var/awslogs/etc/awslogs.conf"
+    datetime_fmt = "<%= @awslogs["datetime_format"] %>"
+    multi_line_start_pattern = "<%= @awslogs["multi_line_start_pattern"] %>"
+    config = _get_config(file_path)
+    for section_name, section_content in config.items():
+        section = {"__section__": section_name,
+                   "datetime_format": datetime_fmt,
+                   "multi_line_start_pattern": multi_line_start_pattern,
+                   **section_content}
+        writer = ConfigFileWriter()
+        writer.update_config(section, file_path)
+
+
+if __name__ == "__main__":
+    main()

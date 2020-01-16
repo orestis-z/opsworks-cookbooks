@@ -2,9 +2,9 @@
 ## Install Packages ##
 ######################
 
-case node['platform_family']
+case node["platform_family"]
   # RHEL platforms (redhat, centos, scientific, etc)
-  when 'rhel'
+  when "rhel"
     execute "Install amazon-linux-extras packages" do
       user "root"
       command "amazon-linux-extras install epel"
@@ -16,7 +16,7 @@ case node['platform_family']
     end
 
   # debian-ish platforms (debian, ubuntu, linuxmint)
-  when 'debian'
+  when "debian"
     bash "Install python3.7" do
       user "root"
       code <<-EOS
@@ -93,9 +93,9 @@ template "/etc/nginx/conf.d/webapp.conf" do
 end
 
 file "/var/log/nginx/error.log" do
-  mode '0644'
-  owner node['platform_family'] == "rhel" ? "nginx" : "www-data"
-  group node['platform_family'] == "rhel" ? "nginx" : "www-data"
+  mode "0644"
+  owner node["platform_family"] == "rhel" ? "nginx" : "www-data"
+  group node["platform_family"] == "rhel" ? "nginx" : "www-data"
 end
 
 execute "Reload nginx config file" do
@@ -139,4 +139,24 @@ end
 execute "Start supervisord if not running and stop wsgi program" do
   user "root"
   command "pgrep supervisord > /dev/null || ( supervisord -c /etc/supervisord.conf && supervisorctl -c /etc/supervisord.conf stop wsgi )"
+end
+
+##############
+## AWS Logs ##
+##############
+
+unless node["flask-wsgi-nginx"]["awslogs"]["multi_line_start_pattern"].nil?
+  template "/tmp/configure_awslogs.py" do
+    source "configure_awslogs.py.erb"
+  end
+
+  execute "Configure AWS Logs" do
+    user "root"
+    command "python3 /tmp/configure_awslogs.py"
+  end
+
+  execute "Restart AWS Logs" do
+    user "root"
+    command "service awslogs restart"
+  end
 end

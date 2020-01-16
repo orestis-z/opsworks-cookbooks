@@ -24,3 +24,8 @@ default["flask-wsgi-nginx"]["nginx"]["enable_sse"] = false
 default["flask-wsgi-nginx"]["supervisor"]["memmon"]["enabled"] = false
 default["flask-wsgi-nginx"]["supervisor"]["memmon"]["max_rss"] = 1000
 default["flask-wsgi-nginx"]["supervisor"]["memmon"]["email"] = ""
+
+# awslogs
+
+default["flask-wsgi-nginx"]["awslogs"]["multi_line_start_pattern"] = nil
+default["flask-wsgi-nginx"]["awslogs"]["datetime_format"] = nil
