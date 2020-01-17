@@ -1,5 +1,5 @@
 ####################
-## ENV Varriables ##
+## ENV Variables ##
 ####################
 
 helper.app[:environment].each do |key, value|

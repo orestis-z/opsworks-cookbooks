@@ -29,7 +29,7 @@ case node["platform_family"]
 
     execute "Install apt-get packages" do
       user "root"
-      command "apt-get install -y libpq-dev awscli unzip" + node["flask-wsgi-nginx"]["apt_packages"].join(" ")
+      command "apt-get install -y libpq-dev awscli unzip " + node["flask-wsgi-nginx"]["apt_packages"].join(" ")
     end
 end
 
@@ -139,24 +139,4 @@ end
 execute "Start supervisord if not running and stop wsgi program" do
   user "root"
   command "pgrep supervisord > /dev/null || ( supervisord -c /etc/supervisord.conf && supervisorctl -c /etc/supervisord.conf stop wsgi )"
-end
-
-##############
-## AWS Logs ##
-##############
-
-unless node["flask-wsgi-nginx"]["awslogs"]["multi_line_start_pattern"].nil?
-  template "/tmp/configure_awslogs.py" do
-    source "configure_awslogs.py.erb"
-  end
-
-  execute "Configure AWS Logs" do
-    user "root"
-    command "python3 /tmp/configure_awslogs.py"
-  end
-
-  execute "Restart AWS Logs" do
-    user "root"
-    command "service awslogs restart"
-  end
 end
