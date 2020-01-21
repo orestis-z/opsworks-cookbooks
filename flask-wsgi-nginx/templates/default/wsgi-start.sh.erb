@@ -8,7 +8,7 @@ cd <%= @app_dir %>
 source venv/bin/activate
 
 <% if @wsgi["server"] == "gunicorn" %>
-exec python3 -m gunicorn.app.wsgiapp \
+exec python -m gunicorn.app.wsgiapp \
     <%= @wsgi["module"] %> \
     --config <%= @wsgi["config"] %> \
     --name "`cat VERSION  2> /dev/null || echo VERSION file not found`" \

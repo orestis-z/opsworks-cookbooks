@@ -27,7 +27,7 @@ bash "Install PIP requirements" do
   cwd helper.app_dir
   code <<-EOS
     source venv/bin/activate
-    python -m pip install -r requirements.txt #{node["flask-wsgi-nginx"]["pip_install_flags"].join(" ")}
+    pip install -r requirements.txt #{node["flask-wsgi-nginx"]["pip_install_flags"].join(" ")}
   EOS
 end
 

@@ -21,9 +21,7 @@ case node["platform_family"]
       user "root"
       code <<-EOS
         apt-get install -y python3.7
-        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1
-        update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 2
-        apt-get install -y python3.7-dev python3.7-apt python3.7-venv
+        apt-get install -y python3.7-dev python3-distutils python3.7-venv
       EOS
     end
 
@@ -43,20 +41,20 @@ end
 
 execute "Install PIP packages" do
     user "root"
-    command "python3 -m pip install --upgrade wheel supervisor superlance pip"
+    command "python3.7 -m pip install --upgrade wheel supervisor superlance pip"
 end
 
 if not node["flask-wsgi-nginx"]["pip_ignore_installed"].empty?
   execute "Install PIP requirements (ignore-installed)" do
     user "root"
-    command "python3 -m pip install --ignore-installed " + node["flask-wsgi-nginx"]["pip_ignore_installed"].join(" ")
+    command "python3.7 -m pip install --ignore-installed " + node["flask-wsgi-nginx"]["pip_ignore_installed"].join(" ")
   end
 end
 
 if not node["flask-wsgi-nginx"]["pip_force_reinstall"].empty?
   execute "Install PIP requirements (force-reinstall)" do
     user "root"
-    command "python3 -m pip install --force-reinstall " + node["flask-wsgi-nginx"]["pip_force_reinstall"].join(" ")
+    command "python3.7 -m pip install --force-reinstall " + node["flask-wsgi-nginx"]["pip_force_reinstall"].join(" ")
   end
 end
 
@@ -170,7 +168,7 @@ end
 execute "Create venv" do
     user "root"
     cwd helper.app_dir
-    command "python3 -m venv venv"
+    command "python3.7 -m venv venv"
 end
 
 bash "Upgrade PIP in venv" do
