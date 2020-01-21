@@ -38,6 +38,13 @@ execute "Install PIP packages" do
     command "python3 -m pip install --upgrade wheel supervisor superlance pip"
 end
 
+if not node["flask-wsgi-nginx"]["pip_ignore_installed"].empty?
+  execute "Install PIP requirements (ignore-installed)" do
+    user "root"
+    command "python3 -m pip install --ignore-installed " + node["flask-wsgi-nginx"]["pip_ignore_installed"].join(" ")
+  end
+end
+
 #################
 ## Create dirs ##
 #################
