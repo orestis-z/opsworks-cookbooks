@@ -45,6 +45,13 @@ if not node["flask-wsgi-nginx"]["pip_ignore_installed"].empty?
   end
 end
 
+if not node["flask-wsgi-nginx"]["pip_force_reinstall"].empty?
+  execute "Install PIP requirements (force-reinstall)" do
+    user "root"
+    command "python3 -m pip install --force-reinstall " + node["flask-wsgi-nginx"]["pip_force_reinstall"].join(" ")
+  end
+end
+
 #################
 ## Create dirs ##
 #################
