@@ -25,7 +25,7 @@ end
 execute "Install PIP requirements" do
   user "root"
   cwd helper.app_dir
-  command "python3 -m pip install -r requirements.txt --ignore-installed"
+  command "python3 -m pip install -r requirements.txt " + node["flask-wsgi-nginx"]["pip_install_flags"].join(" ")
 end
 
 ###############################

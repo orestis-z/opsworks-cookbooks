@@ -3,8 +3,10 @@
 default["flask-wsgi-nginx"]["project_root"] = "/srv/www/"
 default["flask-wsgi-nginx"]["app_subfolder"] = ""
 default["flask-wsgi-nginx"]["apt_packages"] = []
+default["flask-wsgi-nginx"]["pip_install_flags"] = []
 
 # flask
+
 default["flask-wsgi-nginx"]["flask"]["db"] = false
 
 # wsgi
@@ -29,3 +31,4 @@ default["flask-wsgi-nginx"]["supervisor"]["memmon"]["email"] = ""
 
 default["flask-wsgi-nginx"]["awslogs"]["multi_line_start_pattern"] = nil
 default["flask-wsgi-nginx"]["awslogs"]["datetime_format"] = nil
+
