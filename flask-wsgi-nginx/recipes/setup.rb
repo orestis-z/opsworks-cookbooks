@@ -23,7 +23,15 @@ case node["platform_family"]
         apt-get install -y python3.7
         update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.6 1
         update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 2
-        apt-get install -y python3.7-dev python3-pip python3-apt
+        apt-get install -y python3.7-dev python3.7-apt python3.7-venv
+      EOS
+    end
+
+    bash "Install PIP" do
+      user "root"
+      code <<-EOS 
+        curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+        python3.7 get-pip.py
       EOS
     end
 
@@ -153,4 +161,23 @@ end
 execute "Start supervisord if not running and stop wsgi program" do
   user "root"
   command "pgrep supervisord > /dev/null || ( supervisord -c /etc/supervisord.conf && supervisorctl -c /etc/supervisord.conf stop wsgi )"
+end
+
+##########
+## VENV ##
+##########
+
+execute "Create venv" do
+    user "root"
+    cwd helper.app_dir
+    command "python3 -m venv venv"
+end
+
+bash "Upgrade PIP in venv" do
+  user "root"
+  cwd helper.app_dir
+  code <<-EOS
+    source venv/bin/activate
+    python -m pip install --upgrade pip
+  EOS
 end

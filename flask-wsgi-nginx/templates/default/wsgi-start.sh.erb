@@ -2,9 +2,10 @@
 
 # Launch wsgi server
 
-cd <%= @app_dir %>
-
 <% @wsgi = node["flask-wsgi-nginx"]["wsgi"] %>
+
+cd <%= @app_dir %>
+source venv/bin/activate
 
 <% if @wsgi["server"] == "gunicorn" %>
 exec python3 -m gunicorn.app.wsgiapp \

@@ -14,7 +14,7 @@ bash "Download code bundle" do
   user "root"
   cwd helper.app_dir
   code <<-EOS
-    rm -r ./*
+    find . | grep -v "venv/*" | xargs rm
     KEY=`aws s3 ls #{node["flask-wsgi-nginx"][:s3_build_uri]} | sort | tail -n 1 | awk '{print $4}'`
     aws s3 cp #{node["flask-wsgi-nginx"][:s3_build_uri]}$KEY .
     unzip $KEY -d .
@@ -22,10 +22,13 @@ bash "Download code bundle" do
   EOS
 end
 
-execute "Install PIP requirements" do
+bash "Install PIP requirements" do
   user "root"
   cwd helper.app_dir
-  command "python3 -m pip install -r requirements.txt " + node["flask-wsgi-nginx"]["pip_install_flags"].join(" ")
+  code <<-EOS
+    source venv/bin/activate
+    python -m pip install -r requirements.txt #{node["flask-wsgi-nginx"]["pip_install_flags"].join(" ")}
+  EOS
 end
 
 ###############################
