@@ -171,11 +171,22 @@ execute "Create venv" do
     command "python3.7 -m venv venv"
 end
 
-bash "Upgrade PIP in venv" do
-  user "root"
-  cwd helper.app_dir
-  code <<-EOS
-    source venv/bin/activate
-    python -m pip install --upgrade pip
-  EOS
+if node["flask-wsgi-nginx"]["pip_version"].nil? 
+  bash "Upgrade PIP in venv" do
+    user "root"
+    cwd helper.app_dir
+    code <<-EOS
+      source venv/bin/activate
+      pip install --upgrade pip
+    EOS
+  end
+else
+  bash "Upgrade PIP in venv" do
+    user "root"
+    cwd helper.app_dir
+    code <<-EOS
+      source venv/bin/activate
+      pip install pip==#{node["flask-wsgi-nginx"]["pip_version"]}
+    EOS
+  end
 end
