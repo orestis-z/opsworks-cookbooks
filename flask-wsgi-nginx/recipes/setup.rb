@@ -2,7 +2,7 @@
 ## Install Packages ##
 ######################
 
-case node["platform_family"]
+case node[:platform_family]
   # RHEL platforms (redhat, centos, scientific, etc)
   when "rhel"
     execute "Install amazon-linux-extras packages" do
@@ -22,6 +22,7 @@ case node["platform_family"]
       code <<-EOS
         apt-get install -y python3.7
         apt-get install -y python3.7-dev python3-distutils python3.7-venv
+        apt-get clean
       EOS
     end
 
@@ -33,9 +34,12 @@ case node["platform_family"]
       EOS
     end
 
-    execute "Install apt-get packages" do
+    bash "Install apt-get packages" do
       user "root"
-      command "apt-get install -y libpq-dev awscli unzip " + node["flask-wsgi-nginx"]["apt_packages"].join(" ")
+      code <<-EOS
+        apt-get install -y libpq-dev awscli unzip #{node["flask-wsgi-nginx"][:apt_packages].join(" ")}
+        apt-get clean
+      EOS
     end
 end
 
@@ -44,17 +48,17 @@ execute "Install PIP packages" do
     command "python3.7 -m pip install --upgrade wheel supervisor superlance pip"
 end
 
-if not node["flask-wsgi-nginx"]["pip_ignore_installed"].empty?
+if not node["flask-wsgi-nginx"][:pip_ignore_installed].empty?
   execute "Install PIP requirements (ignore-installed)" do
     user "root"
-    command "python3.7 -m pip install --ignore-installed " + node["flask-wsgi-nginx"]["pip_ignore_installed"].join(" ")
+    command "python3.7 -m pip install --ignore-installed " + node["flask-wsgi-nginx"][:pip_ignore_installed].join(" ")
   end
 end
 
-if not node["flask-wsgi-nginx"]["pip_force_reinstall"].empty?
+if not node["flask-wsgi-nginx"][:pip_force_reinstall].empty?
   execute "Install PIP requirements (force-reinstall)" do
     user "root"
-    command "python3.7 -m pip install --force-reinstall " + node["flask-wsgi-nginx"]["pip_force_reinstall"].join(" ")
+    command "python3.7 -m pip install --force-reinstall " + node["flask-wsgi-nginx"][:pip_force_reinstall].join(" ")
   end
 end
 
@@ -114,8 +118,8 @@ end
 
 file "/var/log/nginx/error.log" do
   mode "0644"
-  owner node["platform_family"] == "rhel" ? "nginx" : "www-data"
-  group node["platform_family"] == "rhel" ? "nginx" : "www-data"
+  owner node[:platform_family] == "rhel" ? "nginx" : "www-data"
+  group node[:platform_family] == "rhel" ? "nginx" : "www-data"
 end
 
 execute "Reload nginx config file" do
@@ -171,7 +175,7 @@ execute "Create venv" do
     command "python3.7 -m venv venv"
 end
 
-if node["flask-wsgi-nginx"]["pip_version"].nil? 
+if node["flask-wsgi-nginx"][:pip_version].nil? 
   bash "Upgrade PIP in venv" do
     user "root"
     cwd helper.app_dir
@@ -186,7 +190,22 @@ else
     cwd helper.app_dir
     code <<-EOS
       source venv/bin/activate
-      pip install pip==#{node["flask-wsgi-nginx"]["pip_version"]}
+      pip install pip==#{node["flask-wsgi-nginx"][:pip_version]}
+    EOS
+  end
+end
+
+############
+## Extras ##
+############
+
+if not node["flask-wsgi-nginx"][:bash_extra_script_uri].nil?
+  bash "Execute extra bash commands" do
+    user "root"
+    code <<-EOS
+      aws s3 cp #{node["flask-wsgi-nginx"][:bash_extra_script_uri]} run_file
+      bash run_file
+      rm run_file
     EOS
   end
 end

@@ -28,7 +28,7 @@ bash "Install PIP requirements" do
   retries 1
   code <<-EOS
     source venv/bin/activate
-    pip install -r requirements.txt #{node["flask-wsgi-nginx"]["pip_install_flags"].join(" ")}
+    pip install -r requirements.txt #{node["flask-wsgi-nginx"][:pip_install_flags].join(" ")}
   EOS
 end
 
