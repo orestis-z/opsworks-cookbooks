@@ -181,16 +181,16 @@ if node["flask-wsgi-nginx"][:pip_version].nil?
     cwd helper.app_dir
     code <<-EOS
       source venv/bin/activate
-      pip install --upgrade pip
+      pip install --upgrade pip #{node["flask-wsgi-nginx"][:pip_install_flags].join(" ")}
     EOS
   end
 else
-  bash "Upgrade PIP in venv" do
+  bash "Upgrade PIP to #{node["flask-wsgi-nginx"][:pip_version]} in venv" do
     user "root"
     cwd helper.app_dir
     code <<-EOS
       source venv/bin/activate
-      pip install pip==#{node["flask-wsgi-nginx"][:pip_version]}
+      pip install pip==#{node["flask-wsgi-nginx"][:pip_version]} #{node["flask-wsgi-nginx"][:pip_install_flags].join(" ")}
     EOS
   end
 end

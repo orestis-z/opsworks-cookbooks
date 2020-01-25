@@ -25,7 +25,6 @@ end
 bash "Install PIP requirements" do
   user "root"
   cwd helper.app_dir
-  retries 1
   code <<-EOS
     source venv/bin/activate
     pip install -r requirements.txt #{node["flask-wsgi-nginx"][:pip_install_flags].join(" ")}

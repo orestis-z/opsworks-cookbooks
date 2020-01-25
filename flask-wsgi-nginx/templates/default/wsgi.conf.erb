@@ -8,6 +8,7 @@ autostart=true
 autorestart=unexpected
 stdout_logfile=<%= File.join(helper.deploy_to, "log/wsgi.log") %>
 redirect_stderr=true
+stopsignal=INT
 
 <% @memmon = node["flask-wsgi-nginx"]["supervisor"]["memmon"] %>
 
