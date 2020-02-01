@@ -209,3 +209,15 @@ if not node["flask-wsgi-nginx"][:bash_extra_script_uri].nil?
     EOS
   end
 end
+
+if not node["flask-wsgi-nginx"][:swap_size].nil?
+  bash "Set swap size" do
+    user "root"
+    code <<-EOS
+      swapoff -a
+      dd if=/dev/zero of=/var/swapfile bs=1M count=#{node["flask-wsgi-nginx"][:swap_size]}
+      mkswap /var/swapfile
+      swapon /var/swapfile
+    EOS
+  end
+end
