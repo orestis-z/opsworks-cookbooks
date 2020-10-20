@@ -4,7 +4,7 @@
 
 OpsWorks Cookbook for the Flask-WSGI-NGINX & supervisor server stack for Chef version 12.
 
-<img src="assets/diagram.png" style="max-width: 700px;"/>
+<img src="assets/diagram.png" width="700px"/>
 
 ## Attributes
 
