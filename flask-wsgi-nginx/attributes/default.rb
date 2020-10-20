@@ -1,16 +1,12 @@
 # general
 
 default["flask-wsgi-nginx"]["project_root"] = "/srv/www/"
-default["flask-wsgi-nginx"]["app_subfolder"] = ""
 default["flask-wsgi-nginx"]["apt_packages"] = []
 default["flask-wsgi-nginx"]["pip_version"] = nil
 default["flask-wsgi-nginx"]["pip_install_flags"] = []
 default["flask-wsgi-nginx"]["pip_ignore_installed"] = []
 default["flask-wsgi-nginx"]["pip_force_reinstall"] = []
 
-# flask
-
-default["flask-wsgi-nginx"]["flask"]["db"] = false
 
 # wsgi
 
